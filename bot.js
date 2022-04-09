@@ -1,7 +1,10 @@
-import { BOT_USERNAME, OATH_TOKEN, CHANNEL_NAME } from './env.js';
+require('dotenv').config();
 
 const tmi = require('tmi.js');
 
+const BOT_USERNAME = process.env.BOT_USERNAME;
+const OATH_TOKEN = process.env.OATH_TOKEN;
+const CHANNEL_NAME = process.env.CHANNEL_NAME;
 // Define configuration options
 const opts = {
   identity: {

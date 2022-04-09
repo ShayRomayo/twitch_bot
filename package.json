@@ -1,0 +1,24 @@
+{
+  "name": "twitch_bot",
+  "version": "1.0.0",
+  "description": "Small twitch bot for personal/friend use",
+  "main": "bot.js",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShayRomayo/twitch_bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShayRomayo/twitch_bot/issues"
+  },
+  "homepage": "https://github.com/ShayRomayo/twitch_bot#readme"
+}
