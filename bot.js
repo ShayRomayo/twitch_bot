@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const tmi = require('tmi.js');
+const first = require('./first.js');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OATH_TOKEN = process.env.OATH_TOKEN;
@@ -30,27 +31,13 @@ client.connect();
 function onMessageHandler (target, context, msg, self) {
   if (self) { return; } // Ignore messages from the bot
 
-  // Remove whitespace from chat message
-  const commandName = msg.trim();
-
+  // Remove trailing whitespace and split on all whitespace
+  const commandArgs = msg.trim().split(/[\s]+/);
+  
   // If the command is known, let's execute it
-  // if (commandName === '!dice') {
-  //   const num = rollDice();
-  //   client.say(target, `You rolled a ${num}`);
-  //   console.log(`* Executed ${commandName} command`);
-  // }
-  if (commandName === '!test') {
-      first(client, context);
-  } else {
-    var messageArray = msg.split(' ');
-    console.log(context.username);
+  if (commandArgs[0] === 'first') {
+      first.command(target, context, client);
   }
-}
-
-// Function called when the "dice" command is issued
-function rollDice () {
-  const sides = 6;
-  return Math.floor(Math.random() * sides) + 1;
 }
 
 // Called every time the bot connects to Twitch chat
