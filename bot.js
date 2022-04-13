@@ -65,7 +65,7 @@ function onMessageHandler (target, context, msg, self) {
             quotes.generic(target, client);
         }
         else if (commandArgs[1].toLowerCase() === 'trundle') {
-            quotes.trundle(target, client);
+            quotes.trundle(target, client, commandArgs[2]);
         }
     }
   }
