@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const tmi = require('tmi.js');
 const first = require('./first.js');
+const basicText = require('./basicTextCommands.js');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OATH_TOKEN = process.env.OATH_TOKEN;
@@ -33,10 +34,28 @@ function onMessageHandler (target, context, msg, self) {
 
   // Remove trailing whitespace and split on all whitespace
   const commandArgs = msg.trim().split(/[\s]+/);
-  
+  const commandName = commandArgs[0].toLowerCase();
+
   // If the command is known, let's execute it
-  if (commandArgs[0] === 'first') {
-      first.command(target, context, client);
+  if (commandName === 'first') {
+    first.command(target, context, client);
+  }
+  if (commandName.charAt(0) === '!') {
+    if (commandName === '!gfsword') {
+        basicText.gfsword(target, client);
+    } if (commandName === '!hug') {
+        if (!!commandArgs[1]) {
+            basicText.hug(target, context, client, commandArgs[1]);
+        } else {
+            client.say(target, "You have to hug someone silly!");
+        }
+    } if (commandName === '!discord') {
+        basicText.joinDiscord(target, client);
+    } if (commandName === '!lurk') {
+        basicText.lurk(target, context, client);
+    } if (commandName === '!playlist') {
+        basicText.playlist(target, client);
+    }
   }
 }
 
