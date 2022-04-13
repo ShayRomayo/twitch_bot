@@ -3,6 +3,7 @@ require('dotenv').config();
 const tmi = require('tmi.js');
 const first = require('./first.js');
 const basicText = require('./basicTextCommands.js');
+const backSass = require('./backSass.js');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OATH_TOKEN = process.env.OATH_TOKEN;
@@ -39,6 +40,9 @@ function onMessageHandler (target, context, msg, self) {
   // If the command is known, let's execute it
   if (commandName === 'first') {
     first.command(target, context, client);
+  }
+  if (msg.toLowerCase().includes("@adequatefive")) {
+      backSass.talkBack(target, context, client);
   }
   if (commandName.charAt(0) === '!') {
     if (commandName === '!gfsword') {
