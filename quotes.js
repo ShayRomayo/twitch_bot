@@ -1,4 +1,4 @@
-const genericQuotes = ["Gasligt! Gatekeep! GIRLBOSS!", "Live! Laugh! Love!"];
+const genericQuotes = ["Gaslight! Gatekeep! GIRLBOSS!", "Live! Laugh! Love!"];
 const trundleQuotes = ["Sunlight?! REALLY?!", "I'm gonna crush your dreams! ... They're in your skull right?", "Who does this guy think he is?", "Time to TROLL!"];
 
 function generic(target, client) {
