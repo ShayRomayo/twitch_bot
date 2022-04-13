@@ -4,6 +4,7 @@ const tmi = require('tmi.js');
 const first = require('./first.js');
 const basicText = require('./basicTextCommands.js');
 const backSass = require('./backSass.js');
+const quotes = require('./quotes.js');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OATH_TOKEN = process.env.OATH_TOKEN;
@@ -59,6 +60,13 @@ function onMessageHandler (target, context, msg, self) {
         basicText.lurk(target, context, client);
     } if (commandName === '!playlist') {
         basicText.playlist(target, client);
+    } if (commandName === '!quote') {
+        if (!commandArgs[1]) {
+            quotes.generic(target, client);
+        }
+        else if (commandArgs[1].toLowerCase() === 'trundle') {
+            quotes.trundle(target, client);
+        }
     }
   }
 }
