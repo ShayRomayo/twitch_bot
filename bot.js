@@ -5,6 +5,8 @@ const first = require('./first.js');
 const basicText = require('./basicTextCommands.js');
 const backSass = require('./backSass.js');
 const quotes = require('./quotes.js');
+const swearJar = require('./swearJar.js');
+const pg = require('pg');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OATH_TOKEN = process.env.OATH_TOKEN;
@@ -23,12 +25,27 @@ const opts = {
 // Create a client with our options
 const client = new tmi.client(opts);
 
+
 // Register our event handlers (defined below)
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
 
 // Connect to Twitch:
 client.connect();
+
+const host = 'localhost';
+const user = 'postgres';
+const db = 'twitch_bot';
+const pw = 'postgres';
+const port = 5432;
+const pgClient = new pg.Client({
+    user: user,
+    host: host,
+    database: db,
+    password: pw,
+    port: 5432
+});
+pgClient.connect();
 
 // Called every time a message comes in
 function onMessageHandler (target, context, msg, self) {
@@ -56,6 +73,8 @@ function onMessageHandler (target, context, msg, self) {
         }
     } if (commandName === '!discord') {
         basicText.joinDiscord(target, client);
+    } if (commandName === '!language') {
+        swearJar.addToJar(target, client, pgClient);
     } if (commandName === '!lurk') {
         basicText.lurk(target, context, client);
     } if (commandName === '!playlist') {
@@ -67,6 +86,8 @@ function onMessageHandler (target, context, msg, self) {
         else if (commandArgs[1].toLowerCase() === 'trundle') {
             quotes.trundle(target, client, commandArgs[2]);
         }
+    } if (commandName === '!swearjar') {
+        swearJar.displayJar(target, client, pgClient);
     }
   }
 }

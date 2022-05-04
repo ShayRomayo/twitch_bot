@@ -6,6 +6,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "node": "^17.7.2",
+    "pg": "^8.7.3",
     "tmi.js": "^1.8.5"
   },
   "devDependencies": {},
