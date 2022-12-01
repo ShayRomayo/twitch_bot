@@ -9,13 +9,13 @@ const swearJar = require('./swearJar.js');
 const pg = require('pg');
 
 const BOT_USERNAME = process.env.BOT_USERNAME;
-const OATH_TOKEN = process.env.OATH_TOKEN;
+const OAUTH_TOKEN = process.env.OAUTH_TOKEN;
 const CHANNEL_NAME = process.env.CHANNEL_NAME;
 // Define configuration options
 const opts = {
   identity: {
     username: BOT_USERNAME,
-    password: OATH_TOKEN
+    password: OAUTH_TOKEN
   },
   channels: [
     CHANNEL_NAME
