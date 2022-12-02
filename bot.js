@@ -12,7 +12,7 @@ const BOT_USERNAME = process.env.BOT_USERNAME;
 const OAUTH_TOKEN = process.env.OAUTH_TOKEN;
 const CHANNEL_NAME = process.env.CHANNEL_NAME;
 // Define configuration options
-const opts = {
+const botOpts = {
     identity: {
         username: BOT_USERNAME,
         password: OAUTH_TOKEN,
@@ -20,8 +20,16 @@ const opts = {
     channels: [CHANNEL_NAME],
 };
 
+const pgOpts = {
+    user: "postgres",
+    host: "localhost",
+    database: "twitch_bot",
+    password: "postgres",
+    port: 5432,
+};
+
 // Create a client with our options
-const client = new tmi.client(opts);
+const client = new tmi.client(botOpts);
 
 // Register our event handlers (defined below)
 client.on("message", onMessageHandler);
@@ -30,18 +38,7 @@ client.on("connected", onConnectedHandler);
 // Connect to Twitch:
 client.connect();
 
-const host = "localhost";
-const user = "postgres";
-const db = "twitch_bot";
-const pw = "postgres";
-const port = 5432;
-const pgClient = new pg.Client({
-    user: user,
-    host: host,
-    database: db,
-    password: pw,
-    port: 5432,
-});
+const pgClient = new pg.Client(pgOpts);
 pgClient.connect();
 
 // Called every time a message comes in
@@ -76,7 +73,9 @@ function onMessageHandler(target, context, msg, self) {
             basicText.joinDiscord(target, client);
         }
         if (commandName === "!language") {
-            swearJar.addToJar(target, client, pgClient);
+            if (context.mod) {
+                swearJar.addToJar(target, client, pgClient);
+            }
         }
         if (commandName === "!lurk") {
             basicText.lurk(target, context, client);
@@ -91,6 +90,15 @@ function onMessageHandler(target, context, msg, self) {
                 quotes.trundle(target, client, commandArgs[2]);
             }
         }
+        if (commandName === "!raid") {
+            basicText.subRaidMessage(target, client);
+        }
+        if (commandName === "!raid2") {
+            basicText.followRaidMessage(target, client);
+        }
+        if (commandName === "!socials") {
+            basicText.listSocials(target, client);
+        }
         if (commandName === "!swearjar") {
             swearJar.displayJar(target, client, pgClient);
         }
@@ -100,4 +108,9 @@ function onMessageHandler(target, context, msg, self) {
 // Called every time the bot connects to Twitch chat
 function onConnectedHandler(addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
+
+    /*
+        Call someFile.js
+            (Ping the database [commandNames, quotes -tagged i.e. Trundle -Generic])
+    */
 }
