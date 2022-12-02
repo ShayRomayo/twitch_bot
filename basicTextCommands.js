@@ -50,6 +50,10 @@ function followRaidMessage(target, client) {
     );
 }
 
+function toodaloo(target, client) {
+    client.say(target, "TOOOOOODAAAAAAAAALLLLOOOOOOOOOOOOOOOOO");
+}
+
 /* TODO: Features/Command ides
         !uptime
 */
@@ -63,4 +67,5 @@ module.exports = {
     listSocials,
     subRaidMessage,
     followRaidMessage,
+    toodaloo,
 };

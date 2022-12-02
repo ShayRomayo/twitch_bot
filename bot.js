@@ -59,6 +59,9 @@ function onMessageHandler(target, context, msg, self) {
         backSass.talkBack(target, context, client);
     }
     if (commandName.charAt(0) === "!") {
+        if (commandName === "!bye") {
+            basicText.toodaloo(target, client);
+        }
         if (commandName === "!gfsword") {
             basicText.gfsword(target, client);
         }
