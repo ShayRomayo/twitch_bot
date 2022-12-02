@@ -54,6 +54,9 @@ function toodaloo(target, client) {
     client.say(target, "TOOOOOODAAAAAAAAALLLLOOOOOOOOOOOOOOOOO");
 }
 
+function toodaloo(target, client, byeTarget) {
+    client.say(target, `TOOOOOODAAAAAAAAALLLLOOOOOOOOOOOOOOOOO ${byeTarget}`);
+}
 /* TODO: Features/Command ides
         !uptime
 */

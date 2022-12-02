@@ -60,7 +60,11 @@ function onMessageHandler(target, context, msg, self) {
     }
     if (commandName.charAt(0) === "!") {
         if (commandName === "!bye") {
-            basicText.toodaloo(target, client);
+            if (commandArgs.length > 1) {
+                basicText.toodaloo(target, client, commandArgs[1]);
+            } else {
+                basicText.toodaloo(target, client);
+            }
         }
         if (commandName === "!gfsword") {
             basicText.gfsword(target, client);
