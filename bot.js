@@ -4,6 +4,7 @@ const tmi = require("tmi.js");
 const first = require("./first.js");
 const basicText = require("./basicTextCommands.js");
 const backSass = require("./backSass.js");
+const halloween = require("./halloween.js");
 const quotes = require("./quotes.js");
 const swearJar = require("./swearJar.js");
 const pg = require("pg");
@@ -59,6 +60,15 @@ function onMessageHandler(target, context, msg, self) {
         backSass.talkBack(target, context, client);
     }
     if (commandName.charAt(0) === "!") {
+        if (commandName === "!boo") {
+            if (context.mod) {
+                var numTricks = 1
+                if (commandArgs.length > 1 && !isNaN(+commandArgs[1])) {
+                    numTricks = +commandArgs[1];
+                }
+                halloween.addTrickOrTreaters(target, client, pgClient, numTricks);
+            }
+        }
         if (commandName === "!bye") {
             if (commandArgs.length > 1) {
                 basicText.toodaloo(target, client, commandArgs[1]);
