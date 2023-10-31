@@ -1,11 +1,10 @@
 function addTrickOrTreaters(target, client, pgClient, value) {
-  
     pgClient
         .query(
             `UPDATE public.count_dracula SET total = total + ${value} WHERE service = 'trick_or_treaters'`
         )
         .then((res) =>
-            client.say(target, "Oh wow! We got ${value} trick or treater(s)!")
+            client.say(target, `Oh wow! We got ${value} trick or treater(s)!`)
         )
         .catch((e) => console.error(e.stack));
 }

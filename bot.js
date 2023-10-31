@@ -61,7 +61,7 @@ function onMessageHandler(target, context, msg, self) {
     }
     if (commandName.charAt(0) === "!") {
         if (commandName === "!boo") {
-            if (context.mod) {
+            if (context.mod || context.username === 'legendaryfive') {
                 var numTricks = 1
                 if (commandArgs.length > 1 && !isNaN(+commandArgs[1])) {
                     numTricks = +commandArgs[1];
