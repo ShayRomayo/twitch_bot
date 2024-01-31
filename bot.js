@@ -1,6 +1,10 @@
 require("dotenv").config();
 
 const tmi = require("tmi.js");
+const express = require("express");
+const socket = require('socket.io');
+const app = express();
+
 const first = require("./first.js");
 const basicText = require("./basicTextCommands.js");
 const backSass = require("./backSass.js");
@@ -28,6 +32,17 @@ const pgOpts = {
     password: "postgres",
     port: 5432,
 };
+
+// Create a server running our p5 code on predefined port (or port 3000)
+var server = app.listen(process.env.PORT || 3000);
+console.log(`Running at port `, process.env.PORT || 3000);
+app.use(express.static('p5'));
+
+// Create a socket handler
+var io = socket(server);
+
+//Register our event handlers
+io.sockets.on("connection", onSocketConnection);
 
 // Create a client with our options
 const client = new tmi.client(botOpts);
@@ -60,15 +75,18 @@ function onMessageHandler(target, context, msg, self) {
         backSass.talkBack(target, context, client);
     }
     if (commandName.charAt(0) === "!") {
-        if (commandName === "!boo") {
-            if (context.mod || context.username === 'legendaryfive') {
-                var numTricks = 1
-                if (commandArgs.length > 1 && !isNaN(+commandArgs[1])) {
-                    numTricks = +commandArgs[1];
-                }
-                halloween.addTrickOrTreaters(target, client, pgClient, numTricks);
-            }
-        }
+        // if (commandName === "!boo") {
+        //     if (context.mod || context.username === 'legendaryfive') {
+        //         var numTricks = 1
+        //         if (commandArgs.length > 1 && !isNaN(+commandArgs[1])) {
+        //             numTricks = +commandArgs[1];
+        //         }
+        //         halloween.addTrickOrTreaters(target, client, pgClient, numTricks);
+        //     }
+        // }
+        // if (commandName === "!burfday") {
+        //     basicText.birthday(target, client);
+        // }
         if (commandName === "!bye") {
             if (commandArgs.length > 1) {
                 basicText.toodaloo(target, client, commandArgs[1]);
@@ -119,7 +137,15 @@ function onMessageHandler(target, context, msg, self) {
         if (commandName === "!swearjar") {
             swearJar.displayJar(target, client, pgClient);
         }
+        if (commandName === "!color") {
+            io.emit('changeColor', "Generate random color");
+        }
     }
+}
+
+// Called every time a socket connects to the websocket server
+function onSocketConnection(socket) {
+    console.log("New connection: " + socket.id);
 }
 
 // Called every time the bot connects to Twitch chat

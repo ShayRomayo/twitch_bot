@@ -57,11 +57,16 @@ function toodaloo(target, client) {
 function toodaloo(target, client, byeTarget) {
     client.say(target, `TOOOOOODAAAAAAAAALLLLOOOOOOOOOOOOOOOOO ${byeTarget}`);
 }
+
+function birthday(target, client) {
+    client.say(target, "Everyone wish a happy (early) birthday to the all powerful GF Sword @erincanada16");
+}
 /* TODO: Features/Command ides
         !uptime
 */
 
 module.exports = {
+    birthday,
     gfsword,
     hug,
     joinDiscord,
