@@ -16,6 +16,7 @@ const pg = require("pg");
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OAUTH_TOKEN = process.env.OAUTH_TOKEN;
 const CHANNEL_NAME = process.env.CHANNEL_NAME;
+
 // Define configuration options
 const botOpts = {
     identity: {
