@@ -1,9 +1,12 @@
 require("dotenv").config();
 
+const websocket = require("ws");
+
 const tmi = require("tmi.js");
 const express = require("express");
 const socket = require('socket.io');
 const app = express();
+const axios = require("axios");
 
 const first = require("./first.js");
 const basicText = require("./basicTextCommands.js");
@@ -16,6 +19,9 @@ const pg = require("pg");
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OAUTH_TOKEN = process.env.OAUTH_TOKEN;
 const CHANNEL_NAME = process.env.CHANNEL_NAME;
+const BROADCASTER_ID = process.env.BROADCASTER_USER_ID;
+const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
 
 // Define configuration options
 const botOpts = {
@@ -34,6 +40,25 @@ const pgOpts = {
     port: 5432,
 };
 
+const eventsubOpts = {
+    "type": "channel.channel_points_custom_reward_redemption.add",
+    "version": "1",
+    "condition": {
+        "broadcaster_user_id": BROADCASTER_ID.toString(),
+    },
+    "transport": {
+        "method": "websocket",
+        "session_id": "None"
+    }
+}
+
+const eventsubHeaders = {
+    headers: {
+        "Authorization": "Bearer " + USER_ACCESS_TOKEN,
+        "Client-Id": CLIENT_ID,
+        "Content-Type": "application/json"
+    }
+}
 // Create a server running our p5 code on predefined port (or port 3000)
 var server = app.listen(process.env.PORT || 3000);
 console.log(`Running at port `, process.env.PORT || 3000);
@@ -44,6 +69,14 @@ var io = socket(server);
 
 //Register our event handlers
 io.sockets.on("connection", onSocketConnection);
+
+// Create an eventsub websocket client
+const ws = new websocket.WebSocket("wss://eventsub.wss.twitch.tv/ws");
+
+// Event handlers for ws client
+ws.on("error", console.error);
+
+ws.on("message", onEventsubMessageHandler);
 
 // Create a client with our options
 const client = new tmi.client(botOpts);
@@ -138,7 +171,7 @@ function onMessageHandler(target, context, msg, self) {
         if (commandName === "!swearjar") {
             swearJar.displayJar(target, client, pgClient);
         }
-        if (commandName === "!color") {
+        if (commandName === "!color" && context.mod) {
             io.emit('changeColor', "Generate random color");
         }
     }
@@ -157,4 +190,28 @@ function onConnectedHandler(addr, port) {
         Call someFile.js
             (Ping the database [commandNames, quotes -tagged i.e. Trundle -Generic])
     */
+}
+
+function onEventsubMessageHandler(message) {
+    var data = JSON.parse(message);
+    if (data.metadata.message_type === "session_welcome") {
+        eventsubOpts.transport.session_id = data.payload.session.id;
+        axios.post("https://api.twitch.tv/helix/eventsub/subscriptions", eventsubOpts, eventsubHeaders)
+            .then((res) => {
+                console.log("Response: " + res.toString());
+            })
+            .catch((err) => {
+                console.log(`Error: ${err}`);
+            });
+    } else if (data.metadata.message_type === "notification") {
+        if (data.payload.subscription.type === "channel.channel_points_custom_reward_redemption.add") {
+            if (data.payload.event.reward.title === "Change Color Box") {
+                io.emit('changeColor', "Generate random color");
+            } else {
+                console.log(`Redemption of ${data.payload.event.reward.title}`);
+            }
+        }
+    } else {
+        console.log(`Received: ${data.metadata.message_type}`);
+    }
 }
