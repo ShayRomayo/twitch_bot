@@ -65,6 +65,7 @@ console.log(`Running at port `, process.env.PORT || 3000);
 app.use(express.static('p5'));
 
 // Create a socket handler
+    // TODO: Add OBS Websocket to this server
 var io = socket(server);
 
 //Register our event handlers
@@ -158,6 +159,9 @@ function onMessageHandler(target, context, msg, self) {
             } else if (commandArgs[1].toLowerCase() === "trundle") {
                 quotes.trundle(target, client, commandArgs[2]);
             }
+        }
+        if (commandName === "!nathan") {
+            basicText.nathan(target, context, client);
         }
         if (commandName === "!raid") {
             basicText.subRaidMessage(target, client);

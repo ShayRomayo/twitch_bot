@@ -61,6 +61,14 @@ function toodaloo(target, client, byeTarget) {
 function birthday(target, client) {
     client.say(target, "Everyone wish a happy (early) birthday to the all powerful GF Sword @erincanada16");
 }
+
+function nathan(target, context, client) {
+    if (context.username === "erincanada16") {
+        client.say(target, "Gosh darn it Nathan!");
+    } else {
+        client.say(target, "God damn it Nathan!");
+    }
+    }
 /* TODO: Features/Command ides
         !uptime
 */
@@ -76,4 +84,5 @@ module.exports = {
     subRaidMessage,
     followRaidMessage,
     toodaloo,
+    nathan,
 };
