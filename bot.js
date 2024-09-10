@@ -7,6 +7,8 @@ const express = require("express");
 const socket = require('socket.io');
 const app = express();
 const axios = require("axios");
+const fs = require("fs");
+const os = require("os");
 
 const first = require("./first.js");
 const basicText = require("./basicTextCommands.js");
@@ -16,12 +18,15 @@ const quotes = require("./quotes.js");
 const swearJar = require("./swearJar.js");
 const pg = require("pg");
 
+// dot env constants
 const BOT_USERNAME = process.env.BOT_USERNAME;
 const OAUTH_TOKEN = process.env.OAUTH_TOKEN;
 const CHANNEL_NAME = process.env.CHANNEL_NAME;
 const BROADCASTER_ID = process.env.BROADCASTER_USER_ID;
 const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 // Define configuration options
 const botOpts = {
@@ -59,6 +64,59 @@ const eventsubHeaders = {
         "Content-Type": "application/json"
     }
 }
+
+const eventsubRefreshOpts = {
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET,
+    "grant_type": "refresh_token",
+    "refresh_token": REFRESH_TOKEN
+}
+
+const eventsubRefreshHeaders = {
+    "Content-Type": "application/x-www-form-urlencoded"
+}
+
+// Helper function for rewriting environment values such as on use of refresh token
+function setEnvValue(key, value) {
+
+    // read file from hdd & split if from a linebreak to a array
+    const ENV_VARS = fs.readFileSync("./.env", "utf8").split(os.EOL);
+
+    // find the env we want based on the key
+    const target = ENV_VARS.indexOf(ENV_VARS.find((line) => {
+        return line.match(new RegExp(key));
+    }));
+
+    // replace the key/value with the new value
+    ENV_VARS.splice(target, 1, `${key}=${value}`);
+
+    // write everything back to the file system
+    fs.writeFileSync("./.env", ENV_VARS.join(os.EOL));
+
+}
+
+function eventsubConnectWebsocket(userAccessToken) {
+    eventsubHeaders.headers.Authorization = "Bearer " + userAccessToken;
+    axios.post("https://api.twitch.tv/helix/eventsub/subscriptions", eventsubOpts, eventsubHeaders)
+            .then((res) => {
+                console.log("Response: " + res.toString());
+            })
+            .catch((err) => {
+                console.log(`Error: ${err}`);
+                if (err.response.status == 401) {
+                    axios.post("https://id.twitch.tv/oauth2/token", eventsubRefreshOpts, eventsubRefreshHeaders)
+                    .then((res) => {
+                        setEnvValue("USER_ACCESS_TOKEN", res.data.access_token);
+                        setEnvValue("REFRESH_TOKEN", res.data.refresh_token);
+                        eventsubConnectWebsocket(res.data.access_token);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    })
+                }
+            });
+}
+
 // Create a server running our p5 code on predefined port (or port 3000)
 var server = app.listen(process.env.PORT || 3000);
 console.log(`Running at port `, process.env.PORT || 3000);
@@ -73,9 +131,10 @@ io.sockets.on("connection", onSocketConnection);
 
 // Create an eventsub websocket client
 const ws = new websocket.WebSocket("wss://eventsub.wss.twitch.tv/ws");
+var eventsubConnected = false;
 
 // Event handlers for ws client
-ws.on("error", console.error);
+ws.on("error", onEventsubErrorHandler);
 
 ws.on("message", onEventsubMessageHandler);
 
@@ -200,13 +259,7 @@ function onEventsubMessageHandler(message) {
     var data = JSON.parse(message);
     if (data.metadata.message_type === "session_welcome") {
         eventsubOpts.transport.session_id = data.payload.session.id;
-        axios.post("https://api.twitch.tv/helix/eventsub/subscriptions", eventsubOpts, eventsubHeaders)
-            .then((res) => {
-                console.log("Response: " + res.toString());
-            })
-            .catch((err) => {
-                console.log(`Error: ${err}`);
-            });
+        eventsubConnectWebsocket(USER_ACCESS_TOKEN);
     } else if (data.metadata.message_type === "notification") {
         if (data.payload.subscription.type === "channel.channel_points_custom_reward_redemption.add") {
             if (data.payload.event.reward.title === "Change Color Box") {
@@ -218,4 +271,8 @@ function onEventsubMessageHandler(message) {
     } else {
         console.log(`Received: ${data.metadata.message_type}`);
     }
+}
+
+function onEventsubErrorHandler(error) {
+    console.log(error);
 }
