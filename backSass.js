@@ -33,4 +33,10 @@ function talkBack(target, context, client) {
     );
 }
 
-module.exports = { aiJordnSass, aiTalkBack, sarcasmLevel, talkBack };
+async function aiRedemption(target, client, user, msg) {
+    const result = await model.generateContent(`Earnestly respond to the following message in less than 500 characters but at least 100: ${msg}`);
+
+    client.say(target, `@${user} ${result.response.text()}`);
+}
+
+module.exports = { aiJordnSass, aiRedemption, aiTalkBack, sarcasmLevel, talkBack };

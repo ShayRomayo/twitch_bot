@@ -266,8 +266,10 @@ function onEventsubMessageHandler(message) {
         if (data.payload.subscription.type === "channel.channel_points_custom_reward_redemption.add") {
             if (data.payload.event.reward.title === "Change Color Box") {
                 io.emit('changeColor', "Generate random color");
+            } else if(data.payload.event.reward.title === "Ask AdequateFive a Question") {
+                backSass.aiRedemption(`#${data.payload.event.broadcaster_user_login}`, client, data.payload.event.user_name, data.payload.event.user_input);
             } else {
-                console.log(`Redemption of ${data.payload.event.reward.title}`);
+                console.log(`Redemption of "${data.payload.event.reward.title}"`);
             }
         }
     } else {
