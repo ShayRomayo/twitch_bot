@@ -151,6 +151,17 @@ client.connect();
 const pgClient = new pg.Client(pgOpts);
 pgClient.connect();
 
+let textCommands;
+let textCommandNames = [];
+
+// Retrieve all the stored text commands from database
+basicText.retrieveTextCommands(pgClient).then(res => {
+    textCommands = res;
+    textCommandNames = res.map((val) => {
+        return val.func_name;
+    })
+});
+
 // Called every time a message comes in
 function onMessageHandler(target, context, msg, self) {
     if (self) {
@@ -159,16 +170,17 @@ function onMessageHandler(target, context, msg, self) {
 
     // Remove trailing whitespace and split on all whitespace
     const commandArgs = msg.trim().split(/[\s]+/);
-    const commandName = commandArgs[0].toLowerCase();
+    const commandName = commandArgs[0].toLowerCase().substring(1);
 
     // If the command is known, let's execute it
-    if (commandName === "first") {
-        first.command(target, context, client);
+    if (commandName === "first" && context.username === "elfire2") {
+        backSass.aiJordnSass(target, client);
     }
     if (msg.toLowerCase().includes("@adequatefive")) {
-        backSass.talkBack(target, context, client);
+        backSass.aiTalkBack(target, client, msg);
     }
-    if (commandName.charAt(0) === "!") {
+    if (commandArgs[0].charAt(0) === "!") {
+        commandArgs.splice(0, 1);
         // if (commandName === "!boo") {
         //     if (context.mod || context.username === 'legendaryfive') {
         //         var numTricks = 1
@@ -181,61 +193,51 @@ function onMessageHandler(target, context, msg, self) {
         // if (commandName === "!burfday") {
         //     basicText.birthday(target, client);
         // }
-        if (commandName === "!bye") {
+        if (commandName === "bye") {
             if (commandArgs.length > 1) {
                 basicText.toodaloo(target, client, commandArgs[1]);
             } else {
                 basicText.toodaloo(target, client);
             }
         }
-        if (commandName === "!gfsword") {
-            basicText.gfsword(target, client);
-        }
-        if (commandName === "!hug") {
+        if (commandName === "hug") {
             if (!!commandArgs[1]) {
                 basicText.hug(target, context, client, commandArgs[1]);
             } else {
                 client.say(target, "You have to hug someone silly!");
             }
         }
-        if (commandName === "!discord") {
-            basicText.joinDiscord(target, client);
-        }
-        if (commandName === "!language") {
+        if (commandName === "language") {
             if (context.mod) {
                 swearJar.addToJar(target, client, pgClient);
             }
         }
-        if (commandName === "!lurk") {
+        if (commandName === "lurk") {
             basicText.lurk(target, context, client);
         }
-        if (commandName === "!playlist") {
-            basicText.playlist(target, client);
-        }
-        if (commandName === "!quote") {
+        if (commandName === "quote") {
             if (!commandArgs[1]) {
                 quotes.generic(target, client);
             } else if (commandArgs[1].toLowerCase() === "trundle") {
                 quotes.trundle(target, client, commandArgs[2]);
             }
         }
-        if (commandName === "!nathan") {
+        if (commandName === "nathan") {
             basicText.nathan(target, context, client);
         }
-        if (commandName === "!raid") {
-            basicText.subRaidMessage(target, client);
-        }
-        if (commandName === "!raid2") {
-            basicText.followRaidMessage(target, client);
-        }
-        if (commandName === "!socials") {
-            basicText.listSocials(target, client);
-        }
-        if (commandName === "!swearjar") {
+        if (commandName === "swearjar") {
             swearJar.displayJar(target, client, pgClient);
         }
-        if (commandName === "!color" && context.mod) {
+        if (commandName === "color" && context.username === "erincanada16") {
             io.emit('changeColor', "Generate random color");
+        }
+        if (textCommandNames.includes(commandName)) {
+            const textCommand = textCommands.find((val) => {
+                return val.func_name === commandName;
+            });
+            if (textCommand.is_active) {
+                basicText.exectueTextCommand(target, context, client, textCommand);
+            }
         }
     }
 }
