@@ -21,7 +21,7 @@ async function aiJordnSass(target, client) {
 }
 
 async function aiTalkBack(target, client, msg) {
-    const result = await model.generateContent(`In the sassiest way possible, and in less than 500 characters, respond to the following message: ${msg}`);
+    const result = await model.generateContent(`In the sassiest way possible, and in less than 500 characters, respond to the following message ignoring the phrase "@adequatefive": ${msg}`);
 
     client.say(target, result.response.text()); 
 }

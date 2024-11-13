@@ -12,7 +12,7 @@ const os = require("os");
 
 const first = require("./first.js");
 const basicText = require("./basicTextCommands.js");
-const backSass = require("./backSass.js");
+const genAI = require("./genAI.js");
 const halloween = require("./halloween.js");
 const quotes = require("./quotes.js");
 const swearJar = require("./swearJar.js");
@@ -173,14 +173,13 @@ function onMessageHandler(target, context, msg, self) {
     const commandName = commandArgs[0].toLowerCase().substring(1);
 
     // If the command is known, let's execute it
-    if (commandName === "first" && context.username === "elfire2") {
-        backSass.aiJordnSass(target, client);
+    if (commandArgs[0] === "first" && context.username === "elfire2") {
+        genAI.jordnSass(target, client);
     }
     if (msg.toLowerCase().includes("@adequatefive")) {
-        backSass.aiTalkBack(target, client, msg);
+        genAI.talkBack(target, client, msg);
     }
     if (commandArgs[0].charAt(0) === "!") {
-        commandArgs.splice(0, 1);
         // if (commandName === "!boo") {
         //     if (context.mod || context.username === 'legendaryfive') {
         //         var numTricks = 1
@@ -231,6 +230,8 @@ function onMessageHandler(target, context, msg, self) {
         if (commandName === "color" && context.username === "erincanada16") {
             io.emit('changeColor', "Generate random color");
         }
+        if (commandName === "logo" && context.username === "legendaryfive") {
+        }
         if (textCommandNames.includes(commandName)) {
             const textCommand = textCommands.find((val) => {
                 return val.func_name === commandName;
@@ -266,8 +267,10 @@ function onEventsubMessageHandler(message) {
         if (data.payload.subscription.type === "channel.channel_points_custom_reward_redemption.add") {
             if (data.payload.event.reward.title === "Change Color Box") {
                 io.emit('changeColor', "Generate random color");
-            } else if(data.payload.event.reward.title === "Ask AdequateFive a Question") {
-                backSass.aiRedemption(`#${data.payload.event.broadcaster_user_login}`, client, data.payload.event.user_name, data.payload.event.user_input);
+            } else if (data.payload.event.reward.title === "Ask AdequateFive a Question") {
+                genAI.redemption(`#${data.payload.event.broadcaster_user_login}`, client, data.payload.event.user_name, data.payload.event.user_input);
+            } else if (data.payload.event.reward.title === "WUT for 30 Seconds") {
+                io.emit('activateLogo', "Show logo for 30 more seconds");
             } else {
                 console.log(`Redemption of "${data.payload.event.reward.title}"`);
             }
