@@ -1,13 +1,13 @@
-const logoWidth = 130;
-const logoHeight = 65;
+// const logoWidth = 100;
+// const logoHeight = 75;
 // const horizontalNormal = p5.Vector.createVector(0, 1);
 // const verticalNormal = p5.Vector.createVector(1, 0);
 // const variance = p5.QUARTER_PI / 4;
-const xRadius = logoWidth / 2;
-const yRadius = logoHeight / 2;
-const speed = 3;
+const speed = 1.5;
 
-function Logo(x1, y1, x2, y2, img) {
+function Logo(x1, y1, x2, y2, w, h, img) {
+    const xRadius = w / 2;
+    const yRadius = h / 2;
     const variance = QUARTER_PI / 4;
     this.position = createVector(random(x1 + xRadius, x2 - xRadius), random(y1 + yRadius, y2 - yRadius))
     this.velocity = p5.Vector.random2D().mult(speed);
@@ -36,7 +36,7 @@ function Logo(x1, y1, x2, y2, img) {
     }
     
     this.show = () => {
-        ellipse(this.position.x, this.position.y, logoWidth, logoHeight);
+        ellipse(this.position.x, this.position.y, w, h);
         image(img, this.position.x - img.width / 2, this.position.y - img.height / 2);
     }
 

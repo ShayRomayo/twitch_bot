@@ -53,7 +53,7 @@ async function toggleCommand(enabled) {
     if (enabled === undefined) {
         // Update is_active to the value that it's not
     } else {
-        // Update is_actiave to the value provided
+        // Update is_active to the value provided
     }
 }
 /* TODO: Features/Command ides

@@ -28,6 +28,11 @@ const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
+// other const values
+const loyaltyInterval = 10 * 60 * 1000 // 10 minutes
+// const loyaltyInterval = 10 * 1000 // 10 seconds for testing
+const loyaltyExemptUsers = ['737322970', '30079871', '100135110'];
+
 // Define configuration options
 const botOpts = {
     identity: {
@@ -57,7 +62,7 @@ const eventsubOpts = {
     }
 }
 
-const eventsubHeaders = {
+const twitchApiHeaders = {
     headers: {
         "Authorization": "Bearer " + USER_ACCESS_TOKEN,
         "Client-Id": CLIENT_ID,
@@ -96,25 +101,25 @@ function setEnvValue(key, value) {
 }
 
 function eventsubConnectWebsocket(userAccessToken) {
-    eventsubHeaders.headers.Authorization = "Bearer " + userAccessToken;
-    axios.post("https://api.twitch.tv/helix/eventsub/subscriptions", eventsubOpts, eventsubHeaders)
-            .then((res) => {
-                console.log("Response: " + res.toString());
-            })
-            .catch((err) => {
-                console.log(`Error: ${err}`);
-                if (err.response.status == 401) {
-                    axios.post("https://id.twitch.tv/oauth2/token", eventsubRefreshOpts, eventsubRefreshHeaders)
-                    .then((res) => {
-                        setEnvValue("USER_ACCESS_TOKEN", res.data.access_token);
-                        setEnvValue("REFRESH_TOKEN", res.data.refresh_token);
-                        eventsubConnectWebsocket(res.data.access_token);
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    })
-                }
-            });
+    twitchApiHeaders.headers.Authorization = "Bearer " + userAccessToken;
+    axios.post("https://api.twitch.tv/helix/eventsub/subscriptions", eventsubOpts, twitchApiHeaders)
+        .then((res) => {
+            console.log("Response: " + res.toString());
+        })
+        .catch((err) => {
+            console.log(`Error: ${err}`);
+            if (err.response.status == 401) {
+                axios.post("https://id.twitch.tv/oauth2/token", eventsubRefreshOpts, eventsubRefreshHeaders)
+                .then((res) => {
+                    setEnvValue("USER_ACCESS_TOKEN", res.data.access_token);
+                    setEnvValue("REFRESH_TOKEN", res.data.refresh_token);
+                    eventsubConnectWebsocket(res.data.access_token);
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+            }
+        });
 }
 
 // Create a server running our p5 code on predefined port (or port 3000)
@@ -131,7 +136,6 @@ io.sockets.on("connection", onSocketConnection);
 
 // Create an eventsub websocket client
 const ws = new websocket.WebSocket("wss://eventsub.wss.twitch.tv/ws");
-var eventsubConnected = false;
 
 // Event handlers for ws client
 ws.on("error", onEventsubErrorHandler);
@@ -162,6 +166,60 @@ basicText.retrieveTextCommands(pgClient).then(res => {
     })
 });
 
+let loyaltyFiveMembers = [];
+let loyaltyFiveRoster = [];
+pgClient.query('SELECT user_id, user_login, legendary_points FROM public.loyalty_five')
+    .then((result) => {
+        loyaltyFiveRoster = result.rows;
+        result.rows.forEach((member) => {
+            loyaltyFiveMembers.push(member.user_id);
+        })
+    })
+
+var loyalty = setInterval(loyaltyProgram, loyaltyInterval);
+
+async function loyaltyProgram() {
+    axios.get(`https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${BROADCASTER_ID}&moderator_id=${BROADCASTER_ID}`, twitchApiHeaders)
+        .then((res) => {
+            res.data.data.filter((user) => !loyaltyExemptUsers.includes(user.user_id)).forEach(user => {
+                updatePoints(user.user_id, user.user_login, user.user_name, 10);
+            });
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+}
+
+function getActiveMember(userId) {
+    for (let i = 0 ; i < loyaltyFiveRoster.length ; i++) {
+        if (loyaltyFiveRoster[i].user_id == userId) {
+            return loyaltyFiveRoster[i];
+        }
+    }
+    return null;
+}
+
+function updatePoints(userId, userLogin, userName, points) {
+    if (loyaltyFiveMembers.includes(userId)) {
+        loyaltyFiveRoster.forEach((member) => {
+            if (member.user_id == userId) {
+                member.legendary_points += points;
+            }
+        })
+        pgClient.query(`UPDATE public.loyalty_five SET legendary_points = legendary_points + ${points} WHERE user_id = '${userId}'`)
+            .then((res) => {
+                console.log(`${userName} just received ${points} loyalty points!`);
+            });
+    } else {
+        pgClient.query(`INSERT INTO public.loyalty_five VALUES ('${userId}', '${userLogin}', 100)`)
+        .then((res) => {
+            loyaltyFiveMembers.push(userId);
+            loyaltyFiveRoster.push({user_id: userId, user_login: userLogin, legendary_points: 100});
+            console.log(`${userName} is now a Loyalty Five member!`);
+        });
+    }
+}
+
 // Called every time a message comes in
 function onMessageHandler(target, context, msg, self) {
     if (self) {
@@ -169,7 +227,7 @@ function onMessageHandler(target, context, msg, self) {
     } // Ignore messages from the bot
 
     // Remove trailing whitespace and split on all whitespace
-    const commandArgs = msg.trim().split(/[\s]+/);
+    const commandArgs = msg.trim().split(/\s+/);
     const commandName = commandArgs[0].toLowerCase().substring(1);
 
     // If the command is known, let's execute it
@@ -227,10 +285,33 @@ function onMessageHandler(target, context, msg, self) {
         if (commandName === "swearjar") {
             swearJar.displayJar(target, client, pgClient);
         }
-        if (commandName === "color" && context.username === "erincanada16") {
-            io.emit('changeColor', "Generate random color");
+        if (commandName === "logo" && (context.username === "legendaryfive" || context.username === "erincanada16")) {
+            io.emit('activateLogo', "Show logo for 30 more seconds");
         }
-        if (commandName === "logo" && context.username === "legendaryfive") {
+        if (commandName === "loyalty") {
+            let loyaltyMember = getActiveMember(context['user-id']);
+            if (loyaltyMember == null) {
+                client.say(target, `@${context.username} You are not a member yet`);
+            } else {
+                client.say(target, `@${context.username} You have ${loyaltyMember.legendary_points} legendary points`);
+            }
+        }
+        if (commandName === "gamba") {
+            if (commandArgs.length < 2) {
+                client.say(target, 'You must provide a bet');
+            } else {
+                let bet = parseInt(commandArgs[1].toString());
+                if (isNaN(bet)) {
+                    client.say(target, "That's not a valid bet");
+                } else {
+                    let better = getActiveMember(context['user-id']);
+                    if (better == null || better.legendary_points < bet) {
+                        client.say(target, `@${context.username} You do not have enough legendary points`);
+                    } else {
+                        io.emit('spinWheel', [context.username, context['user-id'], context['display-name'], bet]);
+                    }
+                }
+            }
         }
         if (textCommandNames.includes(commandName)) {
             const textCommand = textCommands.find((val) => {
@@ -245,17 +326,29 @@ function onMessageHandler(target, context, msg, self) {
 
 // Called every time a socket connects to the websocket server
 function onSocketConnection(socket) {
+    socket.on('successfulGamble', (res) => {
+        console.log(`succeeded with ${res}`);
+        let formatText;
+        if (res[3] < 0) {
+            formatText = `@${res[0]} lost ${-res[3]} legendary points`;
+        } else if (res[3] == 0) {
+            formatText = `@${res[0]} went even.`;
+        } else {
+            formatText = `@${res[0]} won ${res[3]} legendary points`;
+        }
+        updatePoints(res[1], res[2], res[0], res[3]);
+        client.say(CHANNEL_NAME, formatText);
+        socket.emit('clearSlots', "Clear slots and prepare to hide");
+    })
+    socket.on('failedGamble', (res) => {
+        client.say(CHANNEL_NAME, `@${res[0]} wait your turn for gamba!`)
+    })
     console.log("New connection: " + socket.id);
 }
 
 // Called every time the bot connects to Twitch chat
 function onConnectedHandler(addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
-
-    /*
-        Call someFile.js
-            (Ping the database [commandNames, quotes -tagged i.e. Trundle -Generic])
-    */
 }
 
 function onEventsubMessageHandler(message) {
@@ -264,13 +357,14 @@ function onEventsubMessageHandler(message) {
         eventsubOpts.transport.session_id = data.payload.session.id;
         eventsubConnectWebsocket(USER_ACCESS_TOKEN);
     } else if (data.metadata.message_type === "notification") {
+        let event = data.payload.event;
         if (data.payload.subscription.type === "channel.channel_points_custom_reward_redemption.add") {
-            if (data.payload.event.reward.title === "Change Color Box") {
-                io.emit('changeColor', "Generate random color");
-            } else if (data.payload.event.reward.title === "Ask AdequateFive a Question") {
+            if (event.reward.title === "Ask AdequateFive a Question") {
                 genAI.redemption(`#${data.payload.event.broadcaster_user_login}`, client, data.payload.event.user_name, data.payload.event.user_input);
-            } else if (data.payload.event.reward.title === "WUT for 30 Seconds") {
+            } else if (event.reward.title === "WUT for 30 Seconds") {
                 io.emit('activateLogo', "Show logo for 30 more seconds");
+            } else if (event.reward.title === "Buy Legendary Points") {
+                updatePoints(event.user_id, event.user_login, event.user_name, 100);
             } else {
                 console.log(`Redemption of "${data.payload.event.reward.title}"`);
             }
