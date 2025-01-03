@@ -1,0 +1,88 @@
+{
+    "payouts": [
+        {
+            "displays": [0, 0, 0],
+            "payout": 0
+        },
+        {
+            "displays": [1, 1, 1],
+            "payout": 1.5
+        },
+        {
+            "displays": [2, 2, 2],
+            "payout": 10
+        },
+        {
+            "displays": [0, 0, 1],
+            "payout" : 0
+        },
+        {
+            "displays": [0, 0, 2],
+            "payout" : 0
+        },
+        {
+            "displays": [0, 1, 0],
+            "payout" : 0
+        },
+        {
+            "displays": [0, 2, 0],
+            "payout" : 0
+        },
+        {
+            "displays": [1, 0, 0],
+            "payout" : 0
+        },
+        {
+            "displays": [2, 0, 0],
+            "payout" : 0
+        },
+        {
+            "displays": [1, 1, 0],
+            "payout" : 1
+        },
+        {
+            "displays": [1, 1, 2],
+            "payout" : 1
+        },
+        {
+            "displays": [1, 0, 1],
+            "payout" : 1
+        },
+        {
+            "displays": [1, 2, 1],
+            "payout" : 1
+        },
+        {
+            "displays": [0, 1, 1],
+            "payout" : 1
+        },
+        {
+            "displays": [2, 1, 1],
+            "payout" : 1
+        },
+        {
+            "displays": [2, 2, 0],
+            "payout" : 2.5
+        },
+        {
+            "displays": [2, 2, 1],
+            "payout" : 2.5
+        },
+        {
+            "displays": [2, 0, 2],
+            "payout" : 2.5
+        },
+        {
+            "displays": [2, 1, 2],
+            "payout" : 2.5
+        },
+        {
+            "displays": [0, 2, 2],
+            "payout" : 2.5
+        },
+        {
+            "displays": [1, 2, 2],
+            "payout" : 2.5
+        }
+    ]
+}
